@@ -3,7 +3,7 @@ const crypto = require('crypto');
 const express = require('express');
 const session = require('express-session');
 const path = require('path');
-const { addUser, loadUsers, verifyPassword } = require('./users');
+const { addUser, loadUsers, removeUser, verifyPassword } = require('./users');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -72,6 +72,54 @@ app.use((req, res, next) => {
 app.get('/api/me', (req, res) => {
   res.json(req.session.user);
 });
+
+function requireAdmin(req, res, next) {
+  if (req.session.user.role === 'admin') return next();
+  if (req.path.startsWith('/api/')) {
+    return res.status(403).json({ error: 'Admin access required.' });
+  }
+  return res.redirect('/');
+}
+
+app.get('/api/users', requireAdmin, (req, res) => {
+  res.json(loadUsers().map((u) => ({ username: u.username, role: u.role })));
+});
+
+app.post('/api/users', requireAdmin, (req, res) => {
+  const { username, password, role } = req.body || {};
+  if (!username || !password || !role) {
+    return res.status(400).json({ error: 'Username, password, and role are required.' });
+  }
+  try {
+    addUser(username, password, role);
+    res.status(201).json({ username, role });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+app.delete('/api/users/:username', requireAdmin, (req, res) => {
+  const { username } = req.params;
+  const users = loadUsers();
+  const target = users.find((u) => u.username.toLowerCase() === username.toLowerCase());
+  if (!target) {
+    return res.status(404).json({ error: `User "${username}" not found.` });
+  }
+
+  const adminCount = users.filter((u) => u.role === 'admin').length;
+  if (target.role === 'admin' && adminCount <= 1) {
+    return res.status(400).json({ error: 'Cannot delete the last remaining admin account.' });
+  }
+
+  try {
+    removeUser(username);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+app.use('/admin', requireAdmin, express.static(path.join(__dirname, 'public/admin')));
 
 app.use(express.static(path.join(__dirname, 'public/app')));
 

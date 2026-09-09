@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manage Accounts - Godline</title>
+<link rel="stylesheet" href="/styles.css">
+<link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <main class="card wide">
+    <div class="topbar">
+      <div>
+        <h1>Manage Accounts</h1>
+        <p class="subtitle">Add or remove driver and admin logins.</p>
+      </div>
+      <div class="account">
+        <span id="whoami"></span>
+        <a href="/" class="link-btn">Back to checker</a>
+        <button type="button" id="logout-btn" class="link-btn">Sign out</button>
+      </div>
+    </div>
+
+    <form id="add-user-form" class="inline-form">
+      <div class="field">
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" required autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required autocomplete="new-password">
+      </div>
+      <div class="field">
+        <label for="role">Role</label>
+        <select id="role" name="role">
+          <option value="driver">Driver</option>
+          <option value="admin">Admin</option>
+        </select>
+      </div>
+      <button type="submit">Add account</button>
+    </form>
+
+    <div id="form-error" class="error" hidden></div>
+
+    <table id="users-table">
+      <thead>
+        <tr>
+          <th>Username</th>
+          <th>Role</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="users-body"></tbody>
+    </table>
+  </main>
+
+  <script src="admin.js"></script>
+</body>
+</html>

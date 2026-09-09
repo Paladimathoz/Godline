@@ -30,9 +30,9 @@ The Google Maps API key is used server-side only, so it is never exposed to the 
 
 ### Access control
 
-The app is login-gated: only accounts you create (role `driver` or `admin`) can sign in and use the checker. There's currently no functional difference between the two roles beyond the label shown in the UI — `role` is there so you can build role-specific features later (e.g. an admin-only user management page).
+The app is login-gated: only accounts you create (role `driver` or `admin`) can sign in and use the checker. Admins additionally get a "Manage users" link (`/admin/`) to add and delete accounts from the browser; drivers don't see it and are redirected away if they hit the URL directly. The last remaining admin account can't be deleted, so you can't lock yourself out.
 
-Users are stored in `data/users.json` (bcrypt-hashed passwords, gitignored — never commit it). Manage them with:
+Users are stored in `data/users.json` (bcrypt-hashed passwords, gitignored — never commit it). You can manage them from `/admin/` once signed in as an admin, or from the CLI:
 
 ```
 node scripts/manage-users.js add <username> <password> <driver|admin>
@@ -54,3 +54,9 @@ All `/api/*` routes except `/api/login` require an active session.
 - `POST /api/logout` — destroys the session.
 - `GET /api/me` — returns the signed-in user's `{ username, role }`.
 - `GET /api/distance?origin=<postcode>&destination=<postcode>&claimedMiles=<number>` — returns the resolved addresses, calculated distance in miles, driving duration, and (if `claimedMiles` was supplied) the difference, discrepancy percentage, and whether it was flagged.
+
+Admin-only (require role `admin`, otherwise 403):
+
+- `GET /api/users` — list accounts (`username`, `role`).
+- `POST /api/users` — `{ username, password, role }` → creates an account.
+- `DELETE /api/users/:username` — deletes an account (rejected for the last remaining admin).

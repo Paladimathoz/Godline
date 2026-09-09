@@ -4,6 +4,7 @@ const errorEl = document.getElementById('error');
 const submitBtn = form.querySelector('button');
 const whoamiEl = document.getElementById('whoami');
 const logoutBtn = document.getElementById('logout-btn');
+const manageUsersLink = document.getElementById('manage-users-link');
 
 (async function loadCurrentUser() {
   const response = await fetch('/api/me');
@@ -13,6 +14,9 @@ const logoutBtn = document.getElementById('logout-btn');
   }
   const user = await response.json();
   whoamiEl.textContent = `${user.username} (${user.role})`;
+  if (user.role === 'admin') {
+    manageUsersLink.hidden = false;
+  }
 })();
 
 logoutBtn.addEventListener('click', async () => {
