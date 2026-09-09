@@ -5,8 +5,6 @@
   --muted: #6b7280;
   --accent: #2563eb;
   --border: #e2e5ea;
-  --ok-bg: #ecfdf5;
-  --ok-text: #047857;
   --warn-bg: #fef2f2;
   --warn-text: #b91c1c;
 }
@@ -27,7 +25,7 @@ body {
 
 .card {
   width: 100%;
-  max-width: 420px;
+  max-width: 360px;
   background: var(--card-bg);
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -91,34 +89,8 @@ button:disabled {
   cursor: not-allowed;
 }
 
-.result {
-  margin-top: 24px;
-  padding: 16px;
-  border-radius: 8px;
-  background: #f9fafb;
-  border: 1px solid var(--border);
-  font-size: 0.95rem;
-  line-height: 1.6;
-}
-
-.result.flagged {
-  background: var(--warn-bg);
-  border-color: #fecaca;
-  color: var(--warn-text);
-}
-
-.result.ok {
-  background: var(--ok-bg);
-  border-color: #a7f3d0;
-  color: var(--ok-text);
-}
-
-.result strong {
-  font-size: 1.1rem;
-}
-
 .error {
-  margin-top: 24px;
+  margin-top: 20px;
   padding: 12px 16px;
   border-radius: 8px;
   background: var(--warn-bg);

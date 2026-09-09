@@ -8,8 +8,16 @@
 </head>
 <body>
   <main class="card">
-    <h1>Postcode Distance Checker</h1>
-    <p class="subtitle">Verify driver-claimed mileage using Google Maps driving distance.</p>
+    <div class="topbar">
+      <div>
+        <h1>Postcode Distance Checker</h1>
+        <p class="subtitle">Verify driver-claimed mileage using Google Maps driving distance.</p>
+      </div>
+      <div class="account">
+        <span id="whoami"></span>
+        <button type="button" id="logout-btn" class="link-btn">Sign out</button>
+      </div>
+    </div>
 
     <form id="distance-form">
       <label for="origin">From postcode</label>

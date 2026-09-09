@@ -1,6 +1,9 @@
 require('dotenv').config();
+const crypto = require('crypto');
 const express = require('express');
+const session = require('express-session');
 const path = require('path');
+const { addUser, loadUsers, verifyPassword } = require('./users');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -9,8 +12,68 @@ const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY;
 const METERS_PER_MILE = 1609.344;
 const DISCREPANCY_THRESHOLD_PERCENT = Number(process.env.DISCREPANCY_THRESHOLD_PERCENT || 10);
 
-app.use(express.static(path.join(__dirname, 'public')));
+if (loadUsers().length === 0 && process.env.ADMIN_USERNAME && process.env.ADMIN_PASSWORD) {
+  addUser(process.env.ADMIN_USERNAME, process.env.ADMIN_PASSWORD, 'admin');
+  console.log(`Created initial admin user "${process.env.ADMIN_USERNAME}" from environment variables.`);
+}
+
+let sessionSecret = process.env.SESSION_SECRET;
+if (!sessionSecret) {
+  sessionSecret = crypto.randomBytes(32).toString('hex');
+  console.warn('SESSION_SECRET not set; using a random secret for this run. Sessions will not survive a restart. Set SESSION_SECRET in .env for production.');
+}
+
 app.use(express.json());
+app.use(
+  session({
+    secret: sessionSecret,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 8 * 60 * 60 * 1000,
+    },
+  })
+);
+
+// Public: login page and login/logout API.
+app.use('/login', express.static(path.join(__dirname, 'public/auth')));
+
+app.post('/api/login', (req, res) => {
+  const { username, password } = req.body || {};
+  if (!username || !password) {
+    return res.status(400).json({ error: 'Username and password are required.' });
+  }
+
+  const user = verifyPassword(username, password);
+  if (!user) {
+    return res.status(401).json({ error: 'Invalid username or password.' });
+  }
+
+  req.session.user = { username: user.username, role: user.role };
+  res.json({ username: user.username, role: user.role });
+});
+
+app.post('/api/logout', (req, res) => {
+  req.session.destroy(() => res.json({ ok: true }));
+});
+
+// Everything below requires a signed-in driver or admin.
+app.use((req, res, next) => {
+  if (req.session && req.session.user) return next();
+  if (req.path.startsWith('/api/')) {
+    return res.status(401).json({ error: 'Authentication required.' });
+  }
+  return res.redirect('/login/');
+});
+
+app.get('/api/me', (req, res) => {
+  res.json(req.session.user);
+});
+
+app.use(express.static(path.join(__dirname, 'public/app')));
 
 app.get('/api/distance', async (req, res) => {
   const origin = (req.query.origin || '').trim();

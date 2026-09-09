@@ -2,6 +2,23 @@ const form = document.getElementById('distance-form');
 const resultEl = document.getElementById('result');
 const errorEl = document.getElementById('error');
 const submitBtn = form.querySelector('button');
+const whoamiEl = document.getElementById('whoami');
+const logoutBtn = document.getElementById('logout-btn');
+
+(async function loadCurrentUser() {
+  const response = await fetch('/api/me');
+  if (!response.ok) {
+    window.location.href = '/login/';
+    return;
+  }
+  const user = await response.json();
+  whoamiEl.textContent = `${user.username} (${user.role})`;
+})();
+
+logoutBtn.addEventListener('click', async () => {
+  await fetch('/api/logout', { method: 'POST' });
+  window.location.href = '/login/';
+});
 
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
@@ -20,6 +37,12 @@ form.addEventListener('submit', async (event) => {
     if (claimedMiles) params.set('claimedMiles', claimedMiles);
 
     const response = await fetch(`/api/distance?${params.toString()}`);
+
+    if (response.status === 401) {
+      window.location.href = '/login/';
+      return;
+    }
+
     const data = await response.json();
 
     if (!response.ok) {
